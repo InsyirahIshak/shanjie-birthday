@@ -1,0 +1,534 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Happy Birthday</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=Bricolage+Grotesque:wght@500;800&family=Newsreader:ital,wght@0,400;1,400&family=Outfit:wght@400;800&family=Playfair+Display:ital,wght@1,700&display=swap" rel="stylesheet">
+<style>
+:root{
+  --pine:#1F3A2E; --moss:#5E7F4F; --paper:#F1EBDD; --ink:#22281F; --blaze:#E8A317; --gold:#D9A84E; --stone:#8B8577;
+  --head:'Bricolage Grotesque',system-ui,sans-serif; --body:'Newsreader',Georgia,serif;
+}
+*{box-sizing:border-box;margin:0}
+html{scroll-behavior:smooth}
+body{background:var(--paper);color:var(--ink);font:1.15rem/1.7 var(--body)}
+h1,h2,h3{font-family:var(--head);line-height:1.1}
+h2{font-size:clamp(1.8rem,5vw,2.6rem);color:var(--pine);margin-bottom:1.5rem}
+h2 em{font:italic 700 1em 'Playfair Display',Georgia,serif;color:var(--gold)}
+section{max-width:720px;margin:0 auto;padding:4.5rem 1.25rem}
+
+/* PHOTO LIGHTBOX */
+.photo-btn{display:block;width:100%;padding:0;background:transparent;border:0;border-radius:0;color:inherit;box-shadow:none}
+.photo-btn:focus-visible{outline:3px solid var(--gold);outline-offset:4px}
+.photo-btn img{cursor:zoom-in}
+#photoLightbox{position:fixed;inset:0;z-index:70;display:flex;align-items:center;justify-content:center;padding:1rem;background:rgba(15,25,20,.94);opacity:0;pointer-events:none;transition:opacity .25s}
+#photoLightbox.open{opacity:1;pointer-events:auto}
+#lightboxImg{display:block;max-width:min(92vw,900px);max-height:78vh;width:auto;height:auto;object-fit:contain;border:5px solid #fff;border-radius:5px;box-shadow:0 8px 30px rgba(0,0,0,.45)}
+#lightboxCaption{color:#fff;text-align:center;font:400 1.05rem/1.4 var(--body);max-width:700px;margin:.8rem auto 0}
+#lightboxClose{position:absolute;top:1rem;right:1rem;width:46px;height:46px;padding:0;border-radius:50%;background:rgba(255,255,255,.14);color:#fff;font:400 1.8rem/1 'Outfit',sans-serif}
+#lightboxClose:hover{background:rgba(255,255,255,.24)}
+.lightbox-card{max-width:94vw;text-align:center}
+
+/* HERO */
+.hero{position:relative;min-height:100vh;min-height:100svh;display:flex;align-items:center;color:#fff;background:var(--pine);overflow:hidden}
+.hero video{position:absolute;inset:0;width:100%;height:100%;object-fit:cover}
+.hero::after{content:"";position:absolute;inset:0;background:linear-gradient(rgba(20,35,28,.55),rgba(20,35,28,.7))}
+.hero>div{position:relative;z-index:1;padding:5rem 1.5rem 3rem;max-width:720px}
+.eyebrow{font:800 .85rem 'Outfit',sans-serif;letter-spacing:.22em;text-transform:uppercase;color:var(--gold);margin-bottom:1rem}
+.hero h1{font:800 clamp(3.2rem,15vw,6.5rem)/.98 'Outfit',system-ui,sans-serif}
+.hero h1 em{font:italic 700 1em 'Playfair Display',Georgia,serif;color:var(--gold)}
+.hero .wish{margin-top:1.5rem;font:400 1.15rem/1.6 'Outfit',system-ui,sans-serif;opacity:.92;max-width:34ch}
+
+/* THEN & NOW (dialog) */
+img{max-width:100%}
+.chat{display:flex;flex-direction:column;gap:1.1rem}
+.msg{max-width:86%;display:flex;flex-direction:column;gap:.55rem}
+.msg.then{align-self:flex-start;align-items:flex-start}
+.msg.now{align-self:flex-end;align-items:flex-end}
+.age{display:block;font:800 .8rem var(--head);letter-spacing:.08em;text-transform:uppercase;color:var(--moss);margin:0 0 .25rem .5rem}
+.bubble{padding:.8rem 1rem;border-radius:18px;box-shadow:0 1px 4px rgba(0,0,0,.12);max-width:100%;overflow-wrap:anywhere}
+.then .bubble{background:#fff;border-bottom-left-radius:4px}
+.now .bubble{background:var(--pine);color:#fff;border-bottom-right-radius:4px}
+.bubble p{font-size:1.05rem;line-height:1.5}
+.shot{margin:0;width:170px;max-width:60vw;background:#fff;padding:.35rem;border-radius:6px;box-shadow:0 2px 8px rgba(0,0,0,.2)}
+.shot.small{width:130px}
+.now .shot{transform:rotate(1.5deg)}
+.then .shot{transform:rotate(-1.5deg)}
+.shot img{display:block;width:100%;aspect-ratio:4/5;object-fit:cover;border-radius:3px}
+.reveal{opacity:0;transform:translateY(18px);transition:opacity .6s,transform .6s}
+.reveal.in{opacity:1;transform:none}
+.now.reveal{transition-delay:.15s}
+@media (prefers-reduced-motion:reduce){.reveal{opacity:1;transform:none;transition:none}}
+
+/* PHOTOS */
+.gallery{display:grid;grid-template-columns:repeat(2,1fr);gap:.9rem}
+@media (min-width:600px){.gallery{grid-template-columns:repeat(3,1fr)}}
+.gallery figure{background:#fff;padding:.4rem .4rem .7rem;box-shadow:0 2px 8px rgba(0,0,0,.18)}
+.gallery figure:nth-child(odd){transform:rotate(-1.5deg)}
+.gallery figure:nth-child(even){transform:rotate(1.2deg)}
+.gallery img{width:100%;aspect-ratio:4/5;object-fit:cover;display:block;background:#d8d2c2}
+.gallery figcaption{font-size:.85rem;line-height:1.3;margin-top:.4rem;text-align:center}
+
+/* VIDEO */
+.song{background:var(--pine);max-width:none}
+.song>div{max-width:720px;margin:0 auto}
+.song h2{color:#fff}
+.song p{color:#d9e2d3;margin-bottom:1.25rem}
+.player{text-align:center;color:#fff}
+.cd{width:min(70vw,260px);aspect-ratio:1;border-radius:50%;margin:0 auto 1.5rem;position:relative;
+  background:url(media/cdbaru.jpg) center/cover,conic-gradient(var(--moss),var(--blaze),var(--moss));
+  box-shadow:0 6px 20px rgba(0,0,0,.4);animation:spin 8s linear infinite;animation-play-state:paused}
+.cd.playing{animation-play-state:running}
+.cd::after{content:"";position:absolute;inset:40%;border-radius:50%;background:var(--pine);border:3px solid var(--paper)}
+@keyframes spin{to{transform:rotate(360deg)}}
+.player h3{font-size:1.4rem}
+.player .artist{color:#d9e2d3;margin:.2rem 0 0}
+.player .cover{font-size:.95rem;color:#b9c7b2;margin-bottom:1.25rem}
+.player input[type=range]{width:100%;accent-color:var(--blaze)}
+.times{display:flex;justify-content:space-between;font:500 .85rem var(--head);color:#b9c7b2}
+.player button{width:64px;height:64px;border-radius:50%;margin-top:1rem;font-size:1.5rem;padding:0}
+
+/* LETTER */
+button{font:800 1rem var(--head);background:var(--blaze);color:var(--ink);border:0;padding:.85rem 1.5rem;border-radius:4px;cursor:pointer}
+button:focus-visible{outline:3px solid var(--pine);outline-offset:3px}
+.letter{display:none;margin-top:1.5rem;background:#fff;padding:2rem 1.75rem;border-left:5px solid var(--blaze);white-space:pre-line}
+.letter.open{display:block}
+/* NAV */
+html{scroll-padding-top:56px}
+#topnav{position:fixed;top:0;left:0;right:0;z-index:20;display:flex;gap:0;padding:.4rem .4rem;background:rgba(20,35,28,.88);overflow-x:auto}
+#topnav a{color:#fff;text-decoration:none;font:500 .88rem var(--head);padding:.5rem .55rem;white-space:nowrap;border-radius:999px;transition:background .2s,color .2s}
+#topnav a.active{background:var(--gold);color:var(--ink)}
+#topnav a:active{background:var(--blaze);color:var(--ink)}
+#topnav a:focus-visible{outline:2px solid var(--blaze)}
+/* WELCOME (confetti + animated sentence) */
+#welcome{position:fixed;inset:0;z-index:50;display:flex;align-items:center;justify-content:center;padding:1.5rem;background:rgba(20,35,28,.94);color:#fff;text-align:center;cursor:pointer;outline:none;transition:opacity .5s}
+#welcome.gone{opacity:0;pointer-events:none}
+#confettiCv{position:fixed;inset:0;width:100%;height:100%;z-index:60;pointer-events:none}
+.wcard{max-width:420px}
+.wcard h2{font:800 clamp(2.8rem,14vw,4.5rem)/1 'Outfit',system-ui,sans-serif;color:#fff;margin:0 0 1rem}
+.wcard h2 span{display:inline-block;opacity:0;animation:pop .7s cubic-bezier(.2,.9,.3,1.3) forwards;animation-delay:calc(.3s + var(--i) * .25s)}
+.wcard h2 em{font:italic 700 1em 'Playfair Display',Georgia,serif;color:var(--gold)}
+@keyframes pop{from{opacity:0;transform:translateY(28px) scale(.85)}to{opacity:1;transform:none}}
+@keyframes fadein{to{opacity:1}}
+#wMsg{font:400 1.15rem/1.6 'Outfit',system-ui,sans-serif;margin-bottom:1.5rem;opacity:0;animation:fadein .8s 1.3s forwards}
+.clock{display:flex;justify-content:center;gap:.6rem;opacity:0;animation:fadein .8s 1.8s forwards}
+.clock div{background:rgba(255,255,255,.12);border-radius:8px;padding:.6rem .5rem;min-width:72px}
+.clock b{display:block;font:800 2rem/1 'Outfit',system-ui,sans-serif;font-variant-numeric:tabular-nums}
+.clock span{font:500 .7rem 'Outfit',sans-serif;letter-spacing:.12em;text-transform:uppercase;color:#d9e2d3}
+.skip{margin-top:1.75rem;font:500 .8rem 'Outfit',sans-serif;letter-spacing:.1em;color:#b9c7b2;opacity:0;animation:fadein .8s 3s forwards}
+@media (prefers-reduced-motion:reduce){.wcard h2 span,#wMsg,.clock,.skip{animation:none;opacity:1}}
+/* QUIZ */
+.hint{margin-bottom:1rem}
+#mtn{width:100%;max-width:380px;display:block;margin:0 auto 1rem}
+#quizBox h3{font-size:1.1rem;color:var(--moss)}
+#quizBox .q{font-size:1.3rem;margin:.3rem 0 1rem}
+#quizBox .opt{display:block;width:100%;min-height:48px;margin:.5rem 0;text-align:left;background:#fff;color:var(--ink);border:2px solid var(--moss);font-weight:500}
+#quizBox .opt.picked{background:var(--moss);color:#fff}
+#quizBox .opt:disabled{opacity:.5}
+#quizBox .opt.picked:disabled{opacity:1}
+#quizBox .opt.bad{background:#eadad4;border-color:#a65c4b;text-decoration:line-through}
+#quizBox .fb{margin:1rem 0;font-style:italic}
+#envelope{margin-top:2rem}
+#envSvg{width:100%;max-width:340px;display:block;margin:-90px auto 0;overflow:visible;transition:margin-top .7s ease-in-out}
+#envSvg.open{margin-top:0}
+#flap{transform-box:fill-box;transform-origin:50% 0;transition:transform .7s ease-in-out}
+#flap polygon{transition:fill .7s}
+#envSvg.open #flap{transform:scaleY(-1)}
+#envSvg.open #flap polygon{fill:#E2D7BA;filter:none}
+#seal{cursor:pointer;transition:opacity .4s}
+#seal:focus-visible{outline:3px solid var(--blaze);outline-offset:4px}
+#envSvg.open #seal{opacity:0;pointer-events:none}
+.pulse{transform-box:fill-box;transform-origin:center;animation:pulse 1.6s ease-in-out infinite}
+@keyframes pulse{50%{transform:scale(1.1)}}
+#hiker{transition:transform 1s ease-in-out}
+#hiker circle{transform-box:fill-box;transform-origin:center}
+#hiker.hop circle{animation:hop .7s}
+@keyframes hop{40%{transform:scale(1.7)}}
+.letter.open{animation:rise .7s ease}
+@keyframes rise{from{opacity:0;transform:translateY(24px)}}
+footer{text-align:center;padding:3rem 1rem;color:var(--stone);font-size:1rem}
+@media (prefers-reduced-motion:reduce){html{scroll-behavior:auto}.pulse,#hiker.hop circle,.letter.open{animation:none}#hiker,#flap,#envSvg{transition:none}}
+</style>
+</head>
+<body>
+
+<nav id="topnav" aria-label="Main navigation">
+  <a href="#top">Home</a><a href="#sec-dialog">Then &amp; Now</a><a href="#sec-quiz">Quiz</a><a href="#sec-song">Song</a><a href="#sec-photos">Photos</a>
+</nav>
+
+<canvas id="confettiCv" aria-hidden="true"></canvas>
+<div id="welcome" role="dialog" aria-modal="true" aria-labelledby="wTitle" tabindex="-1">
+  <div class="wcard">
+    <h2 id="wTitle"></h2>
+    <p id="wMsg"></p>
+    <div class="clock" aria-label="Current time">
+      <div><b id="cH">00</b><span>Hours</span></div>
+      <div><b id="cM">00</b><span>Minutes</span></div>
+      <div><b id="cS">00</b><span>Seconds</span></div>
+    </div>
+    <p class="skip">Tap anywhere to continue</p>
+  </div>
+</div>
+
+<div id="photoLightbox" role="dialog" aria-modal="true" aria-labelledby="lightboxCaption" aria-hidden="true">
+  <div class="lightbox-card">
+    <img id="lightboxImg" src="" alt="">
+    <p id="lightboxCaption"></p>
+  </div>
+  <button id="lightboxClose" type="button" aria-label="Close enlarged photo">&times;</button>
+</div>
+
+<header class="hero" id="top">
+  <!-- 2-second header clip: put your file at media/header.mp4 -->
+  <video src="media/mount.mp4" autoplay muted loop playsinline poster="media/header-poster.jpg"></video>
+  <div>
+    <p class="eyebrow" id="eyebrow"></p>
+    <h1 id="title"></h1>
+    <p class="wish" id="subtitle"></p>
+  </div>
+</header>
+
+<section id="sec-dialog">
+  <h2>Then &amp; <em>Now</em></h2>
+  <div class="chat" id="chat"></div>
+</section>
+
+
+<section id="sec-quiz">
+  <h2>Climb to the <em>Summit</em></h2>
+  <p class="hint" id="quizHint"></p>
+  <svg id="mtn" viewBox="0 0 300 170" role="img" aria-label="Mountain with a hiker climbing to the summit">
+    <polygon points="0,160 150,25 300,160" fill="#5E7F4F"/>
+    <polygon points="150,25 128,60 150,52 172,62" fill="#F1EBDD"/>
+    <line x1="30" y1="133" x2="150" y2="25" stroke="#F1EBDD" stroke-width="2" stroke-dasharray="5 5"/>
+    <line x1="150" y1="25" x2="150" y2="8" stroke="#1F3A2E" stroke-width="2"/><polygon points="150,8 166,13 150,18" fill="#E8A317"/>
+    <g id="stops"></g>
+    <g id="hiker"><circle cx="30" cy="133" r="9" fill="#E8A317" stroke="#1F3A2E" stroke-width="3"/></g>
+  </svg>
+  <div id="quizBox"></div>
+  <div id="envelope" hidden>
+    <p class="hint" id="sealHint">A letter is waiting for you. Tap the red seal.</p>
+    <svg id="envSvg" viewBox="0 -115 300 315" role="group" aria-label="Sealed envelope">
+      <defs>
+        <linearGradient id="gBody" x1="0" y1="0" x2="0" y2="1"><stop offset="0" stop-color="#F3EAD3"/><stop offset="1" stop-color="#E7DCC0"/></linearGradient>
+        <linearGradient id="gSideL" x1="0" y1="0" x2="1" y2="0"><stop offset="0" stop-color="#ECE2C8"/><stop offset="1" stop-color="#F4ECD8"/></linearGradient>
+        <linearGradient id="gSideR" x1="1" y1="0" x2="0" y2="0"><stop offset="0" stop-color="#E9DEC3"/><stop offset="1" stop-color="#F3EAD5"/></linearGradient>
+        <linearGradient id="gBottom" x1="0" y1="1" x2="0" y2="0"><stop offset="0" stop-color="#F6EFDC"/><stop offset="1" stop-color="#EBE1C6"/></linearGradient>
+        <linearGradient id="gFlap" x1="0" y1="0" x2="0" y2="1"><stop offset="0" stop-color="#F7F0DE"/><stop offset="1" stop-color="#EADFC4"/></linearGradient>
+        <radialGradient id="gWax" cx=".38" cy=".32" r=".8"><stop offset="0" stop-color="#A3202F"/><stop offset=".6" stop-color="#7C1220"/><stop offset="1" stop-color="#560B16"/></radialGradient>
+        <filter id="shEnv" x="-10%" y="-10%" width="120%" height="125%"><feDropShadow dx="0" dy="4" stdDeviation="5" flood-color="#3b2f1a" flood-opacity=".28"/></filter>
+        <filter id="shFlap" x="-10%" y="-10%" width="120%" height="130%"><feDropShadow dx="0" dy="3" stdDeviation="3" flood-color="#3b2f1a" flood-opacity=".25"/></filter>
+        <filter id="shSeal" x="-30%" y="-30%" width="160%" height="170%"><feDropShadow dx="0" dy="3" stdDeviation="2.5" flood-color="#2a0a0f" flood-opacity=".45"/></filter>
+      </defs>
+      <rect x="0" y="0" width="300" height="200" rx="4" fill="url(#gBody)" stroke="#D8CCAE" stroke-width="1.5" filter="url(#shEnv)"/>
+      <polygon points="0,0 150,105 0,200" fill="url(#gSideL)" stroke="#D9CDAF" stroke-width="1"/>
+      <polygon points="300,0 150,105 300,200" fill="url(#gSideR)" stroke="#D9CDAF" stroke-width="1"/>
+      <polygon points="0,200 150,100 300,200" fill="url(#gBottom)" stroke="#D9CDAF" stroke-width="1"/>
+      <g id="flap"><polygon points="0,0 300,0 150,110" fill="url(#gFlap)" stroke="#D3C6A6" stroke-width="1.5" stroke-linejoin="round" filter="url(#shFlap)"/></g>
+      <g id="seal" transform="translate(150 110)" role="button" tabindex="0" aria-label="Open the envelope">
+        <g class="pulse">
+          <path d="M29.1,0.0 C29.7,3.4 27.7,7.5 26.1,10.8 C24.5,14.1 22.2,17.2 19.6,19.6 C17.0,22.0 13.6,24.3 10.4,25.0 C7.1,25.7 3.4,24.1 0.0,23.9 C-3.4,23.6 -5.8,23.7 -9.8,23.6 C-13.7,23.6 -21.0,25.8 -23.6,23.6 C-26.2,21.4 -25.5,14.5 -25.5,10.6 C-25.6,6.6 -24.1,3.4 -23.9,0.0 C-23.7,-3.4 -25.2,-6.9 -24.5,-10.1 C-23.7,-13.4 -21.9,-17.0 -19.6,-19.6 C-17.3,-22.2 -13.8,-23.7 -10.6,-25.5 C-7.3,-27.4 -3.7,-30.3 -0.0,-30.7 C3.7,-31.1 8.9,-30.3 11.5,-27.8 C14.1,-25.2 13.5,-18.5 15.4,-15.4 C17.3,-12.4 20.5,-12.0 22.8,-9.4 C25.1,-6.9 28.6,-3.4 29.1,0.0Z" fill="url(#gWax)" filter="url(#shSeal)"/>
+          <path d="M29.1,0.0 C29.7,3.4 27.7,7.5 26.1,10.8 C24.5,14.1 22.2,17.2 19.6,19.6 C17.0,22.0 13.6,24.3 10.4,25.0 C7.1,25.7 3.4,24.1 0.0,23.9 C-3.4,23.6 -5.8,23.7 -9.8,23.6 C-13.7,23.6 -21.0,25.8 -23.6,23.6 C-26.2,21.4 -25.5,14.5 -25.5,10.6 C-25.6,6.6 -24.1,3.4 -23.9,0.0 C-23.7,-3.4 -25.2,-6.9 -24.5,-10.1 C-23.7,-13.4 -21.9,-17.0 -19.6,-19.6 C-17.3,-22.2 -13.8,-23.7 -10.6,-25.5 C-7.3,-27.4 -3.7,-30.3 -0.0,-30.7 C3.7,-31.1 8.9,-30.3 11.5,-27.8 C14.1,-25.2 13.5,-18.5 15.4,-15.4 C17.3,-12.4 20.5,-12.0 22.8,-9.4 C25.1,-6.9 28.6,-3.4 29.1,0.0Z" fill="none" stroke="#B8404D" stroke-width=".8" opacity=".5"/>
+          <circle r="20" fill="none" stroke="#4E0A14" stroke-width="1.6" opacity=".7"/>
+          <circle r="21.4" fill="none" stroke="#B8404D" stroke-width=".7" opacity=".5"/>
+          <g fill="#8E1A2B" stroke="#4E0A14" stroke-width=".9"><ellipse cy="-8.5" rx="4.2" ry="7.5" transform="rotate(0)"/><ellipse cy="-8.5" rx="4.2" ry="7.5" transform="rotate(60)"/><ellipse cy="-8.5" rx="4.2" ry="7.5" transform="rotate(120)"/><ellipse cy="-8.5" rx="4.2" ry="7.5" transform="rotate(180)"/><ellipse cy="-8.5" rx="4.2" ry="7.5" transform="rotate(240)"/><ellipse cy="-8.5" rx="4.2" ry="7.5" transform="rotate(300)"/></g>
+          <circle r="4.2" fill="#6A0F1C" stroke="#4E0A14" stroke-width=".8"/>
+          <g fill="#4E0A14"><circle cx="0" cy="-15.5" r="1.1" transform="rotate(30)"/><circle cx="0" cy="-15.5" r="1.1" transform="rotate(90)"/><circle cx="0" cy="-15.5" r="1.1" transform="rotate(150)"/><circle cx="0" cy="-15.5" r="1.1" transform="rotate(210)"/><circle cx="0" cy="-15.5" r="1.1" transform="rotate(270)"/><circle cx="0" cy="-15.5" r="1.1" transform="rotate(330)"/></g>
+          <ellipse cx="-9" cy="-14" rx="8" ry="4" fill="#fff" opacity=".13" transform="rotate(-30 -9 -14)"/>
+        </g>
+      </g>
+    </svg>
+    <div class="letter" id="letter"></div>
+  </div>
+  </section>
+
+<section class="song" id="sec-song">
+  <div>
+    <h2>A <em>Song</em> for You</h2>
+    <p id="songNote"></p>
+    <div class="player">
+      <div class="cd" id="cd"></div>
+      <h3 id="songTitle"></h3>
+      <p class="artist" id="songArtist"></p>
+      <p class="cover" id="songCover"></p>
+      <audio id="track" preload="metadata"></audio>
+      <input type="range" id="seek" min="0" max="100" value="0" step="0.1" aria-label="Song progress">
+      <div class="times"><span id="curTime">0:00</span><span id="durTime">0:00</span></div>
+      <button id="playBtn" aria-label="Play">&#9654;</button>
+    </div>
+  </div>
+</section>
+
+
+<section id="sec-photos">
+  <h2>Sweet <em>Moments</em></h2>
+  <div class="gallery" id="gallery"></div>
+</section>
+
+<footer id="footer"></footer>
+
+<script>
+/* ========== EDIT THIS PART ========== */
+const SITE = {
+  name: "Shan Jie",
+  from: "Insyi",
+  popup: { message: "I hope you will be happy with this online present hihi", seconds: 7 },
+  eyebrow: "07/10",
+  wish: "Another year, another trail. Wishing you a day as big as the view from the summit.",
+  songNote: "I'm not a professional, but I meant every word.",
+  song: {
+    title: "Takhta Dihatiku #Pendampingmu",
+    artist: "cover by Insyi",
+    cover: "For Shan Jie · 2026",
+    src: "media/song.mp3"
+  },
+  /* THEN & NOW: "age" + "said" = little him (left bubble). "img" + "reply" = grown-up him answering (right bubble).
+     "old" is his photo on the left side (o1.jpg to o6.jpg). Photos go in the media folder. */
+  dialog: [
+    { age: "Age 5", said: "Hello, Syaqir kau buat apa sekarang?Bila nak habis perangai buas kita ni?", old: "media/toddler.jpg", img: "media/mountain.jpg", reply: "Sampai sekarang pun masih buas dik." },
+    { age: "Age 5", said: "WOWW kau hiking bestnya kat manaa", old: "media/toddler.jpg", img: "media/gbh.jpg", reply: "Gunung Besar Hantu. Banyak dah tempat kita pergi hike" },
+    { age: "Age 5", said: "Wahh kat luar negara pun ada kee", old: "media/toddler.jpg", img: "media/china.jpg", reply: "Mestilah ada. Ni ha bukit dekat China" },
+    { age: "Age 5", said: "Uishh kau pergi China HEBATNYAA", old: "media/toddler.jpg", img: "media/china2.jpg", reply: "Eh of course, aku belajar sekali tau kat sana" },
+    { age: "Age 5", said: "Belajar? perghh mesti dah pandai cakap cina kan?", old: "media/toddler.jpg", img: "media/black.jpg", reply:"Mestilah ini Syaqir kott saya kan serba boleh" },
+    { age: "Age 5", said: "Bang nak tengok gambar graduate boleh? ", old: "media/toddler.jpg", img: "media/graduate.jpg", reply: "Nah. TADAAA Congrats to myself for being able to achieve this goal." }
+  ],
+  quizHint: "6 questions about us. Reach the summit to open something for you.",
+  summitMsg: "You made it to the top! There's an envelope waiting for you.",
+  quiz: [
+    { q: "Where was the first place we went for a date?", options: ["Pasar Seni", "KLCC", "Titiwangsa"], correct: 0,
+      right: "YEAYY HEBATNYA SHAN JIE SAYA!",
+      wrong: "Try again boo" },
+    { q: "How many months have we been together?", options: ["4 Months", "8 Months", "10 Months"], correct: 1,
+      right: "YEAYY HEBATNYA SHAN JIE SAYA!",
+      wrong: "Try again boo" },
+    { q: "Who is more likely to be clumsy?", options: ["Insyi", "Shan Jie"], correct: 0,
+      right: "YEAYY HEBATNYA SHAN JIE SAYA!",
+      wrong: "Try again boo" },
+    { q: "When I’m upset, what am I most likely to do?", options: ["Go quiet for a while", "Get angry", "Pretend nothing happened"], correct: 0,
+      right: "YEAYY HEBATNYA SHAN JIE SAYA!",
+      wrong: "Try again boo" },
+    { q: "What is something we do together the most?", options: ["Watching movies or shows together", "Playing around and annoying each other", "Sitting together and just viewing the scenery"], correct: 2,
+      right: "YEAYY HEBATNYA SHAN JIE SAYA!",
+      wrong: "Try again boo" },
+    { q: "What was the first thing we ordered when we ate together?", options: ["NakNak", "Bumbu Babah", "Ilao Ilao"], correct: 0,
+      right: "YEAYY HEBATNYA SHAN JIE SAYA!",
+      wrong: "Try again boo" }
+  ],
+  photos: [
+    { src: "media/class.jpg", cap: "Last time with classmates" },
+    { src: "media/scroll.jpg", cap: "Yeay finally I got to hold the scroll" },
+    { src: "media/bukit.jpg", cap: "Bukit Dinding for the second time" },
+    { src: "media/fly.jpg", cap: "Fly high!" },
+    { src: "media/sehari.jpg", cap: "Sehari sebelum convo" },
+    { src: "media/dating.jpg", cap: "An hour before watching movie" }
+  ],
+  letter: `Dear Shan Jie,
+
+Happy Birthdayyy My Shan Jie 🥳. Alhamdulillah harini genap awak umur 22 and finally awak dah sama umur dengan saya yeayyy. How do u feel when turning 22? Excited? Nervous? or both? Saya harap awak happy je untuk hari birthday awak ni, walaupun kita tengah jauh kejap, tapi saya nak awak tahu yang saya selalu support awak.
+Yeah mungkin saya nampak nonchalant, mungkin saya tak tahu nak buat apa or react apa, tapi saya selalu ada niat untuk support awak. Semoga Shan Jie saya lebih bersemangat untuk tempuhi zaman dewasa, dipermudahkan segala urusan, dapat tempat kerja yang ada environment baik, jumpa orang-orang baik, sentiasa dilimpahkan rezeki. AAMIIN. 
+ 
+Xie xie Shan Jie sebab selalu keluarkan duit untuk kita keluar, selalu layan karenah saya, sayang awak banyak-banyak. Hadiah nanti saya bagi yee lama betul fikir nak bagi awak apa ni so saya
+decide untuk bagi online gift dekat awak. Hopefully awak suka hihi. Okey tu saja dari Insyi awak yang comel ni. Enjoy your birthday boo.
+
+
+Love,
+Insyirah`
+};
+
+/* ==================================== */
+
+document.title = "Happy Birthday " + SITE.name;
+title.innerHTML = "Happy<br><em>Birthday</em><br>" + SITE.name;
+eyebrow.textContent = SITE.eyebrow;
+subtitle.textContent = SITE.wish;
+songNote.textContent = SITE.songNote;
+footer.textContent = "Made with love by " + SITE.from;
+letter.textContent = SITE.letter;
+
+const hide = e => e.target.style.display = "none";
+
+chat.innerHTML = SITE.dialog.map(d => `
+  <div class="msg then reveal">
+    <span class="age">${d.age}</span>
+    ${d.old ? `<figure class="shot"><img src="${d.old}" alt="${SITE.name} at ${d.age}" loading="lazy" onerror="this.parentElement.remove()"></figure>` : ""}
+    <div class="bubble"><p>${d.said}</p></div>
+  </div>
+  <div class="msg now reveal">
+    ${d.img ? `<figure class="shot"><img src="${d.img}" alt="${SITE.name} now" loading="lazy" onerror="this.parentElement.remove()"></figure>` : ""}
+    <div class="bubble"><p>${d.reply}</p></div>
+  </div>`).join("");
+const reveal = new IntersectionObserver(es => es.forEach(e => { if (e.isIntersecting) { e.target.classList.add("in"); reveal.unobserve(e.target); } }), { threshold: .25 });
+chat.querySelectorAll(".reveal").forEach(el => reveal.observe(el));
+
+gallery.innerHTML = SITE.photos.map((p, i) => `
+  <figure>
+    <button class="photo-btn" type="button" data-photo-index="${i}" aria-label="Enlarge photo: ${p.cap}">
+      <img src="${p.src}" alt="${p.cap}" loading="lazy">
+    </button>
+    <figcaption>${p.cap}</figcaption>
+  </figure>`).join("");
+
+/* Photo lightbox: tap/click a photo to see it full screen with its caption. */
+let lightboxIndex = 0;
+function openLightbox(i) {
+  lightboxIndex = i;
+  const p = SITE.photos[i];
+  lightboxImg.src = p.src;
+  lightboxImg.alt = p.cap;
+  lightboxCaption.textContent = p.cap;
+  photoLightbox.classList.add("open");
+  photoLightbox.setAttribute("aria-hidden", "false");
+  document.body.style.overflow = "hidden";
+  lightboxClose.focus();
+}
+function closeLightbox() {
+  photoLightbox.classList.remove("open");
+  photoLightbox.setAttribute("aria-hidden", "true");
+  lightboxImg.src = "";
+  document.body.style.overflow = "";
+}
+gallery.querySelectorAll(".photo-btn").forEach(btn => {
+  btn.addEventListener("click", () => openLightbox(Number(btn.dataset.photoIndex)));
+});
+lightboxClose.onclick = closeLightbox;
+photoLightbox.addEventListener("click", e => {
+  if (e.target === photoLightbox) closeLightbox();
+});
+document.addEventListener("keydown", e => {
+  if (photoLightbox.classList.contains("open") && e.key === "Escape") closeLightbox();
+});
+
+songTitle.textContent = SITE.song.title;
+songArtist.textContent = SITE.song.artist;
+songCover.textContent = SITE.song.cover;
+track.src = SITE.song.src;
+
+const fmt = t => isFinite(t) ? Math.floor(t / 60) + ":" + String(Math.floor(t % 60)).padStart(2, "0") : "0:00";
+playBtn.onclick = () => track.paused ? track.play() : track.pause();
+track.onplay = () => { cd.classList.add("playing"); playBtn.innerHTML = "&#10074;&#10074;"; playBtn.setAttribute("aria-label", "Pause"); };
+track.onpause = () => { cd.classList.remove("playing"); playBtn.innerHTML = "&#9654;"; playBtn.setAttribute("aria-label", "Play"); };
+track.onloadedmetadata = () => durTime.textContent = fmt(track.duration);
+track.ontimeupdate = () => { curTime.textContent = fmt(track.currentTime); seek.value = track.duration ? track.currentTime / track.duration * 100 : 0; };
+seek.oninput = () => { if (track.duration) track.currentTime = seek.value / 100 * track.duration; };
+
+const reduce = matchMedia("(prefers-reduced-motion: reduce)").matches;
+wTitle.innerHTML = `<span style="--i:0">Happy</span> <span style="--i:1"><em>Birthday</em></span><br><span style="--i:2">${SITE.name}!</span>`;
+wMsg.textContent = SITE.popup.message;
+const pad = n => String(n).padStart(2, "0");
+function tick() { const d = new Date(); cH.textContent = pad(d.getHours()); cM.textContent = pad(d.getMinutes()); cS.textContent = pad(d.getSeconds()); }
+tick();
+const clockTimer = setInterval(tick, 1000);
+document.body.style.overflow = "hidden";
+welcome.focus();
+let closeTimer;
+function closeWelcome() {
+  if (welcome.classList.contains("gone")) return;
+  clearInterval(clockTimer); clearTimeout(closeTimer);
+  welcome.classList.add("gone");
+  document.body.style.overflow = "";
+  setTimeout(() => welcome.hidden = true, 500);
+}
+welcome.onclick = closeWelcome;
+document.addEventListener("keydown", e => { if (["Escape", "Enter", " "].includes(e.key) && !welcome.hidden) { e.preventDefault(); closeWelcome(); } });
+closeTimer = setTimeout(closeWelcome, (SITE.popup.seconds || 7) * 1000);
+
+/* confetti */
+const ctx = confettiCv.getContext("2d");
+const colors = ["#D9A84E", "#E8A317", "#5E7F4F", "#F1EBDD", "#B3202A", "#ffffff"];
+let parts = [], raf = 0;
+function sizeCv() { const r = devicePixelRatio || 1; confettiCv.width = innerWidth * r; confettiCv.height = innerHeight * r; ctx.setTransform(r, 0, 0, r, 0, 0); }
+sizeCv(); addEventListener("resize", sizeCv);
+function burst(x, y, n, angle, spread) {
+  for (let i = 0; i < n; i++) {
+    const a = angle + (Math.random() - .5) * spread, v = 6 + Math.random() * 8;
+    parts.push({ x, y, vx: Math.cos(a) * v, vy: Math.sin(a) * v, w: 6 + Math.random() * 6, h: 4 + Math.random() * 5, c: colors[Math.random() * colors.length | 0], r: Math.random() * 6.28, vr: (Math.random() - .5) * .4, life: 0 });
+  }
+  if (!raf) raf = requestAnimationFrame(frame);
+}
+function frame() {
+  ctx.clearRect(0, 0, innerWidth, innerHeight);
+  parts = parts.filter(p => p.y < innerHeight + 20 && p.life < 260);
+  for (const p of parts) {
+    p.vy += .22; p.vx *= .992; p.vy *= .992; p.x += p.vx; p.y += p.vy; p.r += p.vr; p.life++;
+    ctx.save(); ctx.translate(p.x, p.y); ctx.rotate(p.r);
+    ctx.globalAlpha = Math.min(1, (260 - p.life) / 60); ctx.fillStyle = p.c;
+    ctx.fillRect(-p.w / 2, -p.h / 2, p.w, p.h); ctx.restore();
+  }
+  raf = parts.length ? requestAnimationFrame(frame) : 0;
+}
+if (!reduce) {
+  const corners = () => { burst(0, innerHeight, 60, -Math.PI * .32, .8); burst(innerWidth, innerHeight, 60, -Math.PI * .68, .8); };
+  setTimeout(corners, 400);
+  setTimeout(() => burst(innerWidth / 2, innerHeight * .9, 80, -Math.PI / 2, 1.4), 1600);
+  setTimeout(corners, 3200);
+}
+
+const navLinks = [...document.querySelectorAll("#topnav a")];
+const setActive = id => navLinks.forEach(a => a.classList.toggle("active", a.getAttribute("href") === "#" + id));
+navLinks.forEach(a => a.addEventListener("click", () => setActive(a.getAttribute("href").slice(1))));
+const spy = new IntersectionObserver(es => es.forEach(e => { if (e.isIntersecting) setActive(e.target.id); }), { rootMargin: "-45% 0px -50% 0px" });
+["top", "sec-dialog", "sec-quiz", "sec-song", "sec-photos"].forEach(id => spy.observe(document.getElementById(id)));
+setActive("top");
+
+quizHint.textContent = SITE.quizHint;
+let qi = 0, tried = [];
+const total = SITE.quiz.length;
+stops.innerHTML = Array.from({ length: total - 1 }, (_, i) => { const t = (i + 1) / total; return `<circle cx="${30 + 120 * t}" cy="${133 - 108 * t}" r="4" fill="#F1EBDD"/>`; }).join("");
+const place = n => {
+  const t = n / total;
+  hiker.style.transform = `translate(${120 * t}px, ${-108 * t}px)`;
+  hiker.classList.remove("hop"); void hiker.getBoundingClientRect(); hiker.classList.add("hop");
+};
+function showQ() {
+  const q = SITE.quiz[qi];
+  quizBox.innerHTML = `<h3>Question ${qi + 1} of ${total}</h3><p class="q">${q.q}</p>` +
+    q.options.map((o, i) => `<button class="opt${tried.includes(i) ? " bad" : ""}" data-i="${i}" ${tried.includes(i) ? "disabled" : ""}>${o}</button>`).join("");
+  quizBox.querySelectorAll(".opt:not(:disabled)").forEach(b => b.onclick = () => answer(+b.dataset.i, b));
+}
+function answer(i, btn) {
+  const q = SITE.quiz[qi];
+  quizBox.querySelectorAll(".opt").forEach(b => b.disabled = true);
+  if (i !== q.correct) {
+    btn.classList.add("bad");
+    quizBox.insertAdjacentHTML("beforeend", `<p class="fb">${q.wrong}</p><button id="retryBtn">Try again</button>`);
+    retryBtn.onclick = () => { tried.push(i); showQ(); };
+    return;
+  }
+  btn.classList.add("picked");
+  place(qi + 1);
+  mtn.scrollIntoView({ block: "nearest", behavior: "smooth" });
+  let msg = q.right;
+  if (qi === Math.floor(total / 2) - 1) msg += " Halfway there, keep going!";
+  const last = qi === total - 1;
+  quizBox.insertAdjacentHTML("beforeend", `<p class="fb">${msg}</p><button id="nextBtn">${last ? "Reach the summit" : "Next"}</button>`);
+  nextBtn.onclick = () => { qi++; tried = []; last ? summit() : showQ(); };
+}
+function summit() {
+  quizBox.innerHTML = `<h3>You made it to the summit!</h3><p class="q">${SITE.summitMsg}</p>`;
+  envelope.hidden = false;
+  if (!reduce) {
+    burst(innerWidth * .18, innerHeight * .75, 70, -Math.PI * .35, 1.0);
+    burst(innerWidth * .82, innerHeight * .75, 70, -Math.PI * .65, 1.0);
+    burst(innerWidth / 2, innerHeight * .82, 90, -Math.PI / 2, 1.35);
+  }
+}
+showQ();
+
+function openEnv() {
+  if (envSvg.classList.contains("open")) return;
+  envSvg.classList.add("open");
+  sealHint.hidden = true;
+  if (!reduce) {
+    burst(innerWidth * .2, innerHeight * .62, 55, -Math.PI * .35, .9);
+    burst(innerWidth * .8, innerHeight * .62, 55, -Math.PI * .65, .9);
+    burst(innerWidth / 2, innerHeight * .72, 75, -Math.PI / 2, 1.2);
+  }
+  setTimeout(() => { letter.classList.add("open"); letter.scrollIntoView({ behavior: "smooth", block: "start" }); }, 700);
+}
+seal.onclick = openEnv;
+seal.onkeydown = e => { if (e.key === "Enter" || e.key === " ") { e.preventDefault(); openEnv(); } };
+</script>
+</body>
+</html>
